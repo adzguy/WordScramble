@@ -9,25 +9,19 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    let people = ["Finn", "John", "Mark", "Lebap"]
+    
     var body: some View {
-        List {
-            Section(header: Text("Section 1")){
-                Text("Hello, World!")
-                Text("Hello, World!")
-                Text("Hello, World!")
-            }
-
-            Section(header: Text("Section 2")){
-                ForEach(0..<5) {
-                    Text("Dynamuc row \($0)")
-                }
-            }
-
-            Section(header: Text("Section 3")) {
-                Text("Static row 3")
-                Text("Statuc row 4")
-            }
+        List(people, id: \.self) {
+            Text($0)
         }
+//      Or this way its the same
+//        List {
+//            ForEach(people, id: \.self) {
+//                Text($0)
+//            }
+//        }
     .listStyle(GroupedListStyle())
     }
 }
