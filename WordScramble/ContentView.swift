@@ -18,50 +18,80 @@ struct ContentView: View {
     @State private var errorMessage = ""
     @State private var showingError = false
     
-    var body: some View {
+    var calculateScore: Int {
+        var score = 0
+        
+        for i in 0..<usedWords.count {
+            score += usedWords[i].count
+        }
+        return score
+    }
     
+    var body: some View {
+
         NavigationView {
             VStack {
+                VStack {
+                    Text("score")
+                    Text("\(calculateScore)")
+                }
+                .padding()
+                .background(Color.secondary)
+                .cornerRadius(20)
+
+
                 TextField("Enter your word", text: $newWord, onCommit: addNewWord)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                    .padding()
-                
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .autocapitalization(.none)
+                        .padding()
+                    
                 List(usedWords, id: \.self) {
-                    Image(systemName: "\($0.count).circle")
-                    Text($0)
+                        Image(systemName: "\($0.count).circle")
+                        Text($0)
                 }
             }
-        .navigationBarTitle(rootWord)
-        .onAppear(perform: startGame)
-            .alert(isPresented: $showingError) {
-                Alert(title: Text(errorTitle), message: Text(errorMessage), dismissButton: .default(Text("OK")))
+            .navigationBarItems(leading: Button(action: startGame){
+                Text("Restar Game")
+            })
+            .navigationBarTitle(rootWord)
+            .onAppear(perform: startGame)
+                .alert(isPresented: $showingError) {
+                    Alert(title: Text(errorTitle), message: Text(errorMessage), dismissButton: .default(Text("OK")))
             }
         }
     }
     
+    
     func addNewWord() {
         //lowercase and trim the word, to make sure we don't add dublicate words with case differences
-        let word = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         //exit if the remaining string is empty
-        guard word.count > 0 else {
+        guard answer.count > 0 else {
             return
         }
         
-        guard isOriginal(word: word) else {
+        guard isOriginal(word: answer) else {
             wordError(title: "Word used already", message: "Be more original!")
             return
         }
-        guard isPossible(word: word) else {
-            wordError(title: "Word not recognized", message: "You can't just make them up, you know!")
+        guard isPossible(word: answer) else {
+            if answer == rootWord {
+                wordError(title: "Nope", message: "Should be different from the root word!")
+            }else{
+                wordError(title: "Word not recognized", message: "You can't just make them up, you know!")
+            }
             return
         }
-        guard isReal(word: word) else {
-            wordError(title: "Word not possible", message: "This isn't a real word")
+        guard isReal(word: answer) else {
+            if answer.count < 3 {
+                wordError(title: "Too Short", message: "Must be longer than two letters. Try harder!")
+            }else {
+                wordError(title: "Word not possible", message: "This isn't a real word")
+            }
             return
         }
         
-        usedWords.insert(word, at: 0)
+        usedWords.insert(answer, at: 0)
         newWord = ""
         
     }
@@ -75,7 +105,7 @@ struct ContentView: View {
                 let allWords = startWords.components(separatedBy: "\n")
                 // 4. Pick one random word, or use "silkworm" as a sensible default
                 rootWord = allWords.randomElement() ?? "silkworm"
-                
+                usedWords = [String]()
                 return
             }
         }
@@ -90,6 +120,10 @@ struct ContentView: View {
     func isPossible(word: String) -> Bool {
         var tempWord = rootWord
         
+        if word == rootWord {
+            return false
+        }
+        
         for letter in word {
             if let pos = tempWord.firstIndex(of: letter) {
                 tempWord.remove(at: pos)
@@ -102,10 +136,14 @@ struct ContentView: View {
     
     func isReal(word: String) -> Bool {
         let checker = UITextChecker()
-        let range = NSRange(location: 0, length: word.utf16.count)
-        let misspelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
-        
-        return misspelledRange.location == NSNotFound
+        if word.count < 3 {
+            return false
+        }else {
+            let range = NSRange(location: 0, length: word.utf16.count)
+            let misspelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
+            return misspelledRange.location == NSNotFound
+        }
+
     }
     
     func wordError(title: String, message: String) {
