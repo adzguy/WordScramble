@@ -32,11 +32,12 @@ struct ContentView: View {
         NavigationView {
             VStack {
                 VStack {
-                    Text("score")
+                    Text("Score")
                     Text("\(calculateScore)")
                 }
                 .padding()
-                .background(Color.secondary)
+                .background(Color.white)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
                 .cornerRadius(20)
 
 
@@ -45,9 +46,13 @@ struct ContentView: View {
                         .autocapitalization(.none)
                         .padding()
                     
-                List(usedWords, id: \.self) {
-                        Image(systemName: "\($0.count).circle")
-                        Text($0)
+                List(usedWords, id: \.self) { word in
+                    HStack {
+                        Image(systemName: "\(word.count).circle")
+                            Text(word)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibility(label: Text("\(word), \(word.count) letters"))
                 }
             }
             .navigationBarItems(leading: Button(action: startGame){
